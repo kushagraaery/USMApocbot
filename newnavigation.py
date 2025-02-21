@@ -449,7 +449,6 @@ elif page == "Research based First Draft":
                 st.error("Error while sending data to Google Sheets!")
     
 elif page == "Incedo Insights Analyzer":    
-        st.write("updated new")
         com.iframe("https://lottie.host/embed/cab54264-ba4f-4663-8415-9992125e6d0a/dQgwO9lDGf.lottie")
         
         # Chatbot 2.0 Section with Enhanced Styling and Animations
