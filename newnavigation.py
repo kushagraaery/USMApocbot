@@ -435,16 +435,9 @@ elif page == "Research based First Draft":
             if "successfully" in status:
                 st.success("Successfully sent data to Google Sheets!")
                 # Show spinner for 10 seconds
-                with st.spinner("Redirecting you to Google Site in few seconds..."):
+                with st.spinner("Wait for a few seconds for the data to update..."):
                     time.sleep(10)
-
-                 # JavaScript for redirection
-                js_code = """
-                    <script>
-                    window.open("https://lookerstudio.google.com/reporting/1d479466-dbf2-4050-9f01-06b79437c30c/page/page_12345/edit", "_blank");
-                    </script>
-                """
-                st.components.v1.html(js_code)
+                st.page_link("https://sites.google.com/gene.com/usma-poc/home", label="Navigate to Reviewer Page", icon="📝")
             else:
                 st.error("Error while sending data to Google Sheets!")
     
