@@ -438,12 +438,16 @@ elif page == "Research based First Draft":
                 with st.spinner("Redirecting you to Google Site in few seconds..."):
                     time.sleep(10)
 
-                # Redirect to new page
-                webbrowser.open_new_tab("https://www.gene.com/")
+                 # JavaScript for redirection
+                redirect_script = """
+                <meta http-equiv="refresh" content="0; url='https://www.gene.com/'">
+                """
+                st.markdown(redirect_script, unsafe_allow_html=True)
             else:
                 st.error("Error while sending data to Google Sheets!")
     
 elif page == "Incedo Insights Analyzer":    
+        st.write("updated")
         com.iframe("https://lottie.host/embed/cab54264-ba4f-4663-8415-9992125e6d0a/dQgwO9lDGf.lottie")
         
         # Chatbot 2.0 Section with Enhanced Styling and Animations
