@@ -439,7 +439,7 @@ elif page == "Research based First Draft":
                     time.sleep(10)
 
                 # Redirect to new page
-                webbrowser.open_new_tab("https://sites.google.com/gene.com/usma-poc/home")
+                webbrowser.open_new_tab("https://www.gene.com/")
             else:
                 st.error("Error while sending data to Google Sheets!")
     
