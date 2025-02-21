@@ -63,7 +63,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar Navigation
-st.sidebar.image("incedologo.png", width=100)  # Adjust width as needed
+st.sidebar.image("https://naf.org/wp-content/uploads/2024/04/incedo-logo-01.png", width=100)  # Adjust width as needed
 st.sidebar.title("Main Menu")
 page = st.sidebar.radio("", ["Home Page", "Research based First Draft", "Incedo Insights Analyzer"])
 
