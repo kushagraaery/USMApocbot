@@ -439,15 +439,17 @@ elif page == "Research based First Draft":
                     time.sleep(10)
 
                  # JavaScript for redirection
-                redirect_script = """
-                <meta http-equiv="refresh" content="0; url='https://www.gene.com/'">
+                js_code = """
+                    <script>
+                    window.open("https://sites.google.com/gene.com/usma-poc/home", "_blank");
+                    </script>
                 """
-                st.markdown(redirect_script, unsafe_allow_html=True)
+                st.components.v1.html(js_code)
             else:
                 st.error("Error while sending data to Google Sheets!")
     
 elif page == "Incedo Insights Analyzer":    
-        st.write("updated")
+        st.write("updated new")
         com.iframe("https://lottie.host/embed/cab54264-ba4f-4663-8415-9992125e6d0a/dQgwO9lDGf.lottie")
         
         # Chatbot 2.0 Section with Enhanced Styling and Animations
