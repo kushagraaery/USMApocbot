@@ -441,7 +441,7 @@ elif page == "Research based First Draft":
                  # JavaScript for redirection
                 js_code = """
                     <script>
-                    window.open("https://docs.google.com/spreadsheets/d/1ZWkdYncxEUAGrzr2_TtAgZZvuXkiqMYlqR4eXwBxvLg/edit?gid=0#gid=0", "_blank");
+                    window.open("https://lookerstudio.google.com/reporting/1d479466-dbf2-4050-9f01-06b79437c30c/page/page_12345/edit", "_blank");
                     </script>
                 """
                 st.components.v1.html(js_code)
