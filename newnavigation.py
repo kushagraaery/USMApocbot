@@ -441,7 +441,7 @@ elif page == "Research based First Draft":
                  # JavaScript for redirection
                 js_code = """
                     <script>
-                    window.open("https://www.gene.com/", "_blank");
+                    window.open("https://sites.google.com/gene.com/usma-poc/home", "_blank");
                     </script>
                 """
                 st.components.v1.html(js_code)
