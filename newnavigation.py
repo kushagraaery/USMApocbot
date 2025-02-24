@@ -606,6 +606,9 @@ elif page == "Incedo Insights Analyzer":
         if chat_input_2:
             st.session_state["messages_2"].append({"role": "user", "content": chat_input_2})
 
+            # Check if the society data is already in the report
+            if "report_data" not in st.session_state:
+                st.session_state.report_data = pd.DataFrame()  # Initialize report_data if not already done
             # Specify the path to your Excel file
             df = st.session_state.report_data
         
