@@ -607,7 +607,7 @@ elif page == "Incedo Insights Analyzer":
             st.session_state["messages_2"].append({"role": "user", "content": chat_input_2})
 
             # Specify the path to your Excel file
-            df, sha = st.session_state.report_data
+            df = st.session_state.report_data
         
             # Prepare report data as context
             report_context = format_report_for_context(df)
