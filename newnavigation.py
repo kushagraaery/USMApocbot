@@ -27,6 +27,12 @@ st.set_page_config(page_title="Pharma Q&A Generator", page_icon="💊")
 # Inline CSS for styling
 st.markdown("""
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+            
+            html, body, [class*="st-"], .main, .block-container {
+                font-family: 'Poppins', sans-serif;
+                color: #333;
+            }
         /* Main content area - white background */
         body {
             background-color: #ffffff;
