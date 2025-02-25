@@ -751,6 +751,7 @@ questions = [
     "Is society_name involved in therapeutic research collaborations? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
     "Does society_name include top therapeutic area experts on its board? Respond with one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
     "Name the Region where the society_name is from? Just name the Region in word for the answer."
+]
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Add your GitHub token in the .env file
 GITHUB_REPO = "kushagraaery/USMApocbot"  # Replace with your GitHub repo
