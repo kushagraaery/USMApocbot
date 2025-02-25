@@ -715,7 +715,28 @@ elif page == "Incedo Insights Analyzer":
 #             st.chat_message("user").write(msg["content"])
 #         elif msg["role"] == "assistant":
 #             st.chat_message("assistant").write(msg["content"])
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Add your GitHub token in the .env file
+GITHUB_REPO = "kushagraaery/USMApocbot"  # Replace with your GitHub repo
+FILE_PATH = "Pharma_Society_Report.xlsx"  # Path to the Excel file in the repo
     
+# GitHub API URL
+BASE_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
+    
+# Helper function to fetch Excel file from GitHub
+def fetch_excel_from_github():
+    headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+    response = requests.get(BASE_URL, headers=headers)
+    if response.status_code == 200:
+        content = response.json()
+        file_data = base64.b64decode(content["content"])
+        df = pd.read_excel(BytesIO(file_data))
+        sha = content["sha"]  # Required for updating the file
+        return df, sha
+    else:
+        st.error("Failed to fetch the Excel file from GitHub.")
+        return None, None
+
 # Helper function to update Excel file in GitHub
 def update_excel_in_github(df, sha):
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
@@ -818,7 +839,7 @@ def scheduled_job():
 def start_scheduler():
     # Create the scheduler and add the job
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_job, 'cron', day_of_week='tue', hour=14, minute=20, timezone="Asia/Kolkata")
+    scheduler.add_job(scheduled_job, 'cron', day_of_week='tue', hour=14, minute=55, timezone="Asia/Kolkata")
     # Start the scheduler
     scheduler.start()
 
@@ -826,4 +847,4 @@ def start_scheduler():
 if __name__ == "__main__":
     threading.Thread(target=start_scheduler, daemon=True).start()
 
-st.write("updated 3")
+st.write("updated 4")
