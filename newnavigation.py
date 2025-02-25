@@ -716,6 +716,98 @@ elif page == "Incedo Insights Analyzer":
 #         elif msg["role"] == "assistant":
 #             st.chat_message("assistant").write(msg["content"])
     
+# Helper function to update Excel file in GitHub
+def update_excel_in_github(df, sha):
+    headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+    # Convert DataFrame to binary Excel content
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False)
+    file_content = output.getvalue()
+    # Prepare API payload
+    payload = {
+        "message": "Updated Excel file via Streamlit",
+        "content": base64.b64encode(file_content).decode("utf-8"),
+        "sha": sha
+    }
+    response = requests.put(BASE_URL, headers=headers, data=json.dumps(payload))
+    if response.status_code == 200:
+        st.success("Data updated successfully!")
+    else:
+        st.error(f"Failed to update the data: {response.text}")
+
+# Function to fetch data for all societies
+def fetch_all_societies_data():
+    report_data = pd.DataFrame(columns=[
+        "Society Name",
+        *questions
+    ])
+
+    for society in all_societies:
+        society_data = {"Society Name": society}
+        modified_questions = [q.replace("society_name", society) for q in questions]
+
+        for i, question in enumerate(modified_questions):
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": question}]
+                )
+                answer = response["choices"][0]["message"]["content"].strip()
+                society_data[questions[i]] = answer
+            except Exception as e:
+                st.error(f"Error with '{question}': {e}")
+                society_data[questions[i]] = "Error"
+        report_data = pd.concat([report_data, pd.DataFrame([society_data])], ignore_index=True)
+    
+
+    # Fetch the existing data and SHA from GitHub
+    df, sha = fetch_excel_from_github()
+    if df is not None and sha is not None:
+        # Replace the entire data with the new report_data
+        update_report_data(report_data, sha)
+    else:
+        st.error("Failed to fetch existing data from GitHub.")
+
+def update_report_data(report_data, sha):
+    if report_data is not None and sha is not None:
+        # Fetch the existing data from GitHub
+        df, _ = fetch_excel_from_github()
+        if df is not None:
+            # Iterate through the new report data
+            for _, row in report_data.iterrows():
+                society_name = row["Society Name"]
+                new_membership_count = row.get(
+                    "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
+                    None
+                )
+
+                # Ensure the new membership count is a valid integer
+                try:
+                    new_membership_count = int(new_membership_count)
+                except (ValueError, TypeError):
+                    st.warning(f"Invalid membership count for {society_name}, skipping update.")
+                    continue  # Skip this entry if the membership count is invalid
+
+                # Check if the society exists in the existing data
+                if society_name in df["Society Name"].values:
+                    # Update the existing row directly
+                    index = df[df["Society Name"] == society_name].index[0]
+                    df.loc[index, 
+                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
+                    ] = new_membership_count
+                else:
+                    # Append the new row if the society doesn't exist
+                    new_row = row.to_dict()
+                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+            # Upload the updated DataFrame back to GitHub
+            update_excel_in_github(df, sha)
+        else:
+            st.error("Failed to fetch the existing data from GitHub.")
+    else:
+        st.error("No report data or SHA provided for update.")
+
 # This function will run the job without the lock
 def scheduled_job():
     print("Weekly data fetch initiated...")
@@ -726,7 +818,7 @@ def scheduled_job():
 def start_scheduler():
     # Create the scheduler and add the job
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_job, 'cron', day_of_week='tue', hour=13, minute=58, timezone="Asia/Kolkata")
+    scheduler.add_job(scheduled_job, 'cron', day_of_week='mon', hour=10, minute=00, timezone="Asia/Kolkata")
     # Start the scheduler
     scheduler.start()
 
@@ -734,4 +826,4 @@ def start_scheduler():
 if __name__ == "__main__":
     threading.Thread(target=start_scheduler, daemon=True).start()
 
-st.write("updated")
+st.write("updated 2")
