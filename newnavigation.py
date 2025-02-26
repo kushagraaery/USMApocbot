@@ -716,6 +716,43 @@ elif page == "Incedo Insights Analyzer":
 #         elif msg["role"] == "assistant":
 #             st.chat_message("assistant").write(msg["content"])
 
+# Define all available society options
+all_societies = [
+    "FLASCO (Florida Society of Clinical Oncology)", 
+    "GASCO (Georgia Society of Clinical Oncology)",
+    "PSOH (Pennsylvania Society of Oncology and Hematology)",
+    "WVOS (West Virginia Oncology Society)",
+    "DSCO (Delaware Society of Clinical Oncology)",
+    "OSNJ (Oncology Society of New Jersey)",
+    "ESHOS (Empire State Hematology Oncology Society)"
+]
+
+# Define all available society options
+new_societies = [
+    "",
+    "FLASCO (Florida Society of Clinical Oncology)", 
+    "GASCO (Georgia Society of Clinical Oncology)",
+    "PSOH (Pennsylvania Society of Oncology and Hematology)",
+    "WVOS (West Virginia Oncology Society)",
+    "DSCO (Delaware Society of Clinical Oncology)",
+    "OSNJ (Oncology Society of New Jersey)",
+    "ESHOS (Empire State Hematology Oncology Society)"
+]
+
+# Define questions
+questions = [
+    "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
+    "Does society_name encompasses community sites? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Is society_name influential on state or local policy? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Does society_name provide engagement opportunity with leadership? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Does society_name provide support for clinical trial recruitment? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Does society_name provide engagement opportunity with payors? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Does society_name include area experts on its board? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Is society_name involved in therapeutic research collaborations? Respond one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Does society_name include top therapeutic area experts on its board? Respond with one word ('yes' or 'no') only plus provide a justification for the answer also after a comma.",
+    "Name the Region where the society_name is from? Just name the Region in word for the answer."
+]
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Add your GitHub token in the .env file
 GITHUB_REPO = "kushagraaery/USMApocbot"  # Replace with your GitHub repo
 FILE_PATH = "Pharma_Society_Report.xlsx"  # Path to the Excel file in the repo
