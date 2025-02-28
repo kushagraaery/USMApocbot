@@ -75,7 +75,8 @@ page = st.sidebar.radio("", ["Home Page", "Research based First Draft", "Queryin
 
 if page == "Home Page":
     st.markdown('<div class="main-header">💊 Introduction </div>', unsafe_allow_html=True)
-    
+
+    st.image("https://github.com/kushagraaery/USMApocbot/blob/main/usmapocbot.jpg")
     st.markdown('<div class="content-section">', unsafe_allow_html=True)
     st.subheader("What is a Society?")
     st.write(
