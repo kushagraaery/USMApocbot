@@ -295,8 +295,8 @@ elif page == "Research based First Draft":
         else:
             st.error("Failed to fetch existing data from GitHub.")
     
-    def update_report_data(report_data, sha):
-    if report_data is not None and sha is not None:
+   def update_report_data(report_data, sha):
+       if report_data is not None and sha is not None:
         # Fetch the existing data from GitHub
         df, _ = fetch_excel_from_github()
         if df is not None:
