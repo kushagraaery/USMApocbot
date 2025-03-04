@@ -297,42 +297,72 @@ elif page == "Research based First Draft":
     
     def update_report_data(report_data, sha):
         if report_data is not None and sha is not None:
-            # Fetch the existing data from GitHub
-            df, _ = fetch_excel_from_github()
-            if df is not None:
-                # Iterate through the new report data
-                for _, row in report_data.iterrows():
-                    society_name = row["Society Name"]
-                    new_membership_count = row.get(
-                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
-                        None
-                    )
-    
-                    # Ensure the new membership count is a valid integer
+        # Fetch the existing data from GitHub
+        df, _ = fetch_excel_from_github()
+        if df is not None:
+            for _, row in report_data.iterrows():
+                society_name = row["Society Name"]
+                
+                # Fetch responses for all questions using OpenAI
+                modified_questions = [q.replace("society_name", society_name) for q in questions]
+                new_responses = {}
+
+                for i, question in enumerate(modified_questions):
                     try:
-                        new_membership_count = int(new_membership_count)
+                        response = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo",
+                            messages=[{"role": "user", "content": question}]
+                        )
+                        answer = response["choices"][0]["message"]["content"].strip()
+                        new_responses[questions[i]] = answer
+                    except Exception as e:
+                        st.error(f"Error fetching response for '{question}': {e}")
+                        new_responses[questions[i]] = "Error"
+
+                # Membership Count Handling (Averaging)
+                new_membership_count = row.get(
+                    "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
+                    None
+                )
+                try:
+                    new_membership_count = int(new_membership_count)
+                except (ValueError, TypeError):
+                    st.warning(f"Invalid membership count for {society_name}, skipping update.")
+                    continue
+
+                if society_name in df["Society Name"].values:
+                    index = df[df["Society Name"] == society_name].index[0]
+                    
+                    # Averaging logic for membership count
+                    existing_count = df.loc[index, 
+                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
+                    ]
+                    try:
+                        existing_count = int(existing_count)
+                        averaged_count = (existing_count + new_membership_count) // 2
                     except (ValueError, TypeError):
-                        st.warning(f"Invalid membership count for {society_name}, skipping update.")
-                        continue  # Skip this entry if the membership count is invalid
-    
-                    # Check if the society exists in the existing data
-                    if society_name in df["Society Name"].values:
-                        # Update the existing row directly
-                        index = df[df["Society Name"] == society_name].index[0]
-                        df.loc[index, 
-                            "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
-                        ] = new_membership_count
-                    else:
-                        # Append the new row if the society doesn't exist
-                        new_row = row.to_dict()
-                        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    
-                # Upload the updated DataFrame back to GitHub
-                update_excel_in_github(df, sha)
-            else:
-                st.error("Failed to fetch the existing data from GitHub.")
+                        averaged_count = new_membership_count
+                    
+                    df.loc[index, 
+                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
+                    ] = averaged_count
+
+                    # Overwrite all other question responses with new GPT-generated responses
+                    for question, response in new_responses.items():
+                        df.loc[index, question] = response
+
+                else:
+                    # Append new society data with generated responses
+                    new_row = row.to_dict()
+                    new_row.update(new_responses)  # Merge generated responses
+                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+            # Upload the updated DataFrame back to GitHub
+            update_excel_in_github(df, sha)
         else:
-            st.error("No report data or SHA provided for update.")
+            st.error("Failed to fetch the existing data from GitHub.")
+    else:
+        st.error("No report data or SHA provided for update.")
     
     # Function to convert dataframe to Excel
     def convert_df_to_excel(df):
@@ -922,4 +952,4 @@ def start_scheduler():
 if __name__ == "__main__":
     threading.Thread(target=start_scheduler, daemon=True).start()
 
-st.write("updated")
+st.write("updated 2")
