@@ -303,59 +303,71 @@ elif page == "Research based First Draft":
                 for _, row in report_data.iterrows():
                     society_name = row["Society Name"]
                     
-                    # Fetch responses for all questions using OpenAI
-                    modified_questions = [q.replace("society_name", society_name) for q in questions]
-                    new_responses = {}
-    
-                    for i, question in enumerate(modified_questions):
-                        try:
-                            response = openai.ChatCompletion.create(
-                                model="gpt-3.5-turbo",
-                                messages=[{"role": "user", "content": question}]
-                            )
-                            answer = response["choices"][0]["message"]["content"].strip()
-                            new_responses[questions[i]] = answer
-                        except Exception as e:
-                            st.error(f"Error fetching response for '{question}': {e}")
-                            new_responses[questions[i]] = "Error"
-    
-                    # Membership Count Handling (Averaging)
+                    # Retrieve new membership count & ensure it's valid
                     new_membership_count = row.get(
                         "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
                         None
                     )
+                    
                     try:
                         new_membership_count = int(new_membership_count)
                     except (ValueError, TypeError):
                         st.warning(f"Invalid membership count for {society_name}, skipping update.")
                         continue
     
+                    # Check if the society exists in the existing data
                     if society_name in df["Society Name"].values:
                         index = df[df["Society Name"] == society_name].index[0]
                         
-                        # Averaging logic for membership count
-                        existing_count = df.loc[index, 
+                        # Maintain averaging logic for membership count
+                        old_membership_count = df.at[index, 
                             "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
                         ]
-                        try:
-                            existing_count = int(existing_count)
-                            averaged_count = (existing_count + new_membership_count) // 2
-                        except (ValueError, TypeError):
-                            averaged_count = new_membership_count
                         
-                        df.loc[index, 
+                        try:
+                            old_membership_count = int(old_membership_count)
+                            averaged_membership = (old_membership_count + new_membership_count) // 2
+                        except (ValueError, TypeError):
+                            averaged_membership = new_membership_count  # If old data is corrupt, take new value
+                        
+                        df.at[index, 
                             "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
-                        ] = averaged_count
-    
-                        # Overwrite all other question responses with new GPT-generated responses
-                        for question, response in new_responses.items():
-                            df.loc[index, question] = response
+                        ] = averaged_membership
+                        
+                        # Generate real-time responses for other questions using OpenAI
+                        modified_questions = [q.replace("society_name", society_name) for q in questions]
+                        
+                        for i, question in enumerate(modified_questions):
+                            try:
+                                response = openai.ChatCompletion.create(
+                                    model="gpt-3.5-turbo",
+                                    messages=[{"role": "user", "content": question}]
+                                )
+                                answer = response["choices"][0]["message"]["content"].strip()
+                                df.at[index, questions[i]] = answer  # Update the answer
+                            except Exception as e:
+                                st.error(f"Error with '{question}': {e}")
+                                df.at[index, questions[i]] = "Error"
     
                     else:
-                        # Append new society data with generated responses
-                        new_row = row.to_dict()
-                        new_row.update(new_responses)  # Merge generated responses
-                        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                        # Create a new row with responses generated from OpenAI
+                        society_data = {"Society Name": society_name}
+                        modified_questions = [q.replace("society_name", society_name) for q in questions]
+    
+                        for i, question in enumerate(modified_questions):
+                            try:
+                                response = openai.ChatCompletion.create(
+                                    model="gpt-3.5-turbo",
+                                    messages=[{"role": "user", "content": question}]
+                                )
+                                answer = response["choices"][0]["message"]["content"].strip()
+                                society_data[questions[i]] = answer
+                            except Exception as e:
+                                st.error(f"Error with '{question}': {e}")
+                                society_data[questions[i]] = "Error"
+    
+                        # Append the new row to the dataframe
+                        df = pd.concat([df, pd.DataFrame([society_data])], ignore_index=True)
     
                 # Upload the updated DataFrame back to GitHub
                 update_excel_in_github(df, sha)
