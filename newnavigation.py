@@ -120,8 +120,6 @@ elif page == "Research based First Draft":
     
     # Define all available society options
     all_societies = [
-    "FLASCO (Florida Society of Clinical Oncology)", 
-    "GASCO (Georgia Society of Clinical Oncology)",
     "Soleo Health",
     "Asociacion Puertorriquena De Hemofilia Inc",
     "Dava Oncology, LP",
@@ -299,8 +297,6 @@ elif page == "Research based First Draft":
     # Define all available society options
     new_societies = [
     "",
-    "FLASCO (Florida Society of Clinical Oncology)", 
-    "GASCO (Georgia Society of Clinical Oncology)",
     "Soleo Health",
     "Asociacion Puertorriquena De Hemofilia Inc",
     "Dava Oncology, LP",
@@ -987,8 +983,6 @@ elif page == "Querying Engine":
 
 # Define all available society options
 all_societies = [
-    "FLASCO (Florida Society of Clinical Oncology)", 
-    "GASCO (Georgia Society of Clinical Oncology)",
     "Soleo Health",
     "Asociacion Puertorriquena De Hemofilia Inc",
     "Dava Oncology, LP",
@@ -1166,8 +1160,6 @@ all_societies = [
 # Define all available society options
 new_societies = [
     "",
-    "FLASCO (Florida Society of Clinical Oncology)", 
-    "GASCO (Georgia Society of Clinical Oncology)",
     "Soleo Health",
     "Asociacion Puertorriquena De Hemofilia Inc",
     "Dava Oncology, LP",
