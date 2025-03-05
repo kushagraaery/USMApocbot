@@ -693,72 +693,6 @@ elif page == "Querying Engine":
         st.markdown('</div>', unsafe_allow_html=True)
         st.page_link("https://lookerstudio.google.com/reporting/1d479466-dbf2-4050-9f01-06b79437c30c/page/page_12345/edit", label="Link to Dashboard", icon="📊")
 
-# elif page == "Pharma Insights Chatbot":
-#     # Header section
-#     st.markdown('<div class="main-header">💬 Pharma Insights Chatbot </div>', unsafe_allow_html=True)
-#     st.markdown('💡 This app features a chatbot powered by OpenAI for answering society-related queries.', unsafe_allow_html=True)
-    
-#     # Predefined Prompt Buttons in a grid
-#     st.markdown('<div class="prompt-buttons">', unsafe_allow_html=True)
-#     cols = st.columns(3)
-    
-#     prompt = None
-    
-#     with cols[0]:
-#         if st.button("What are the top 10 oncology societies in California actively supporting clinical trials and research initiatives?"):
-#             prompt = "What are the top 10 oncology societies in California actively supporting clinical trials and research initiatives?"
-#     with cols[1]:
-#         if st.button("Which Oncology Society in the World has the largest membership network and reach?"):
-#             prompt = "Which Oncology Society in the World has the largest membership network and reach?"
-#     with cols[2]:
-#         if st.button("Which Oncology Societies in California collaborate with pharmaceutical companies for drug development initiatives?"):
-#             prompt = "Which Oncology Societies in California collaborate with pharmaceutical companies for drug development initiatives?"
-    
-#     # Add additional buttons in another row
-#     cols = st.columns(3)
-#     with cols[0]:
-#         if st.button("List the Oncology Societies in California that offer leadership opportunities for healthcare professionals."):
-#             prompt = "List the Oncology Societies in California that offer leadership opportunities for healthcare professionals."
-#     with cols[1]:
-#         if st.button("Which Oncology Societies in California are most active in influencing state healthcare policies?"):
-#             prompt = "Which Oncology Societies in California are most active in influencing state healthcare policies?"
-#     with cols[2]:
-#         if st.button("Identify oncology societies in California that provide resources or support for community-based oncology practices."):
-#             prompt = "Identify oncology societies in California that provide resources or support for community-based oncology practices."
-#     st.markdown('</div>', unsafe_allow_html=True)
-    
-#     # Chat Input Section
-#     user_input = st.chat_input("Ask a question or select a prompt...")
-    
-#     # Initialize session state for chat history
-#     if "messages" not in st.session_state:
-#         st.session_state["messages"] = [{"role": "assistant", "content": "How can I assist you today?"}]
-    
-#     # Append user input or prompt to chat history
-#     if prompt or user_input:
-#         user_message = prompt if prompt else user_input
-#         st.session_state["messages"].append({"role": "user", "content": user_message})
-    
-#         # Query OpenAI API with the current messages
-#         with st.spinner("Generating response..."):
-#             try:
-#                 response = openai.ChatCompletion.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=st.session_state["messages"]
-#                 )
-#                 bot_reply = response.choices[0]["message"]["content"]
-#                 st.session_state["messages"].append({"role": "assistant", "content": bot_reply})
-#             except Exception as e:
-#                 bot_reply = f"Error retrieving response: {e}"
-#                 st.session_state["messages"].append({"role": "assistant", "content": bot_reply})
-    
-#     # Display chat history sequentially
-#     for msg in st.session_state["messages"]:
-#         if msg["role"] == "user":
-#             st.chat_message("user").write(msg["content"])
-#         elif msg["role"] == "assistant":
-#             st.chat_message("assistant").write(msg["content"])
-
 # Define all available society options
 all_societies = [
     "FLASCO (Florida Society of Clinical Oncology)", 
@@ -912,32 +846,74 @@ def update_report_data(report_data, sha):
         # Fetch the existing data from GitHub
         df, _ = fetch_excel_from_github()
         if df is not None:
-            # Iterate through the new report data
             for _, row in report_data.iterrows():
                 society_name = row["Society Name"]
+                
+                # Retrieve new membership count & ensure it's valid
                 new_membership_count = row.get(
                     "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
                     None
                 )
-
-                # Ensure the new membership count is a valid integer
+                
                 try:
                     new_membership_count = int(new_membership_count)
                 except (ValueError, TypeError):
                     st.warning(f"Invalid membership count for {society_name}, skipping update.")
-                    continue  # Skip this entry if the membership count is invalid
+                    continue
 
                 # Check if the society exists in the existing data
                 if society_name in df["Society Name"].values:
-                    # Update the existing row directly
                     index = df[df["Society Name"] == society_name].index[0]
-                    df.loc[index, 
+                    
+                    # Maintain averaging logic for membership count
+                    old_membership_count = df.at[index, 
                         "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
-                    ] = new_membership_count
+                    ]
+                    
+                    try:
+                        old_membership_count = int(old_membership_count)
+                        averaged_membership = (old_membership_count + new_membership_count) // 2
+                    except (ValueError, TypeError):
+                        averaged_membership = new_membership_count  # If old data is corrupt, take new value
+                    
+                    df.at[index, 
+                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
+                    ] = averaged_membership
+                    
+                    # Generate real-time responses for other questions using OpenAI
+                    modified_questions = [q.replace("society_name", society_name) for q in questions]
+                    
+                    for i, question in enumerate(modified_questions):
+                        try:
+                            response = openai.ChatCompletion.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "user", "content": question}]
+                            )
+                            answer = response["choices"][0]["message"]["content"].strip()
+                            df.at[index, questions[i]] = answer  # Update the answer
+                        except Exception as e:
+                            st.error(f"Error with '{question}': {e}")
+                            df.at[index, questions[i]] = "Error"
+
                 else:
-                    # Append the new row if the society doesn't exist
-                    new_row = row.to_dict()
-                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                    # Create a new row with responses generated from OpenAI
+                    society_data = {"Society Name": society_name}
+                    modified_questions = [q.replace("society_name", society_name) for q in questions]
+
+                    for i, question in enumerate(modified_questions):
+                        try:
+                            response = openai.ChatCompletion.create(
+                                model="gpt-3.5-turbo",
+                                messages=[{"role": "user", "content": question}]
+                            )
+                            answer = response["choices"][0]["message"]["content"].strip()
+                            society_data[questions[i]] = answer
+                        except Exception as e:
+                            st.error(f"Error with '{question}': {e}")
+                            society_data[questions[i]] = "Error"
+
+                    # Append the new row to the dataframe
+                    df = pd.concat([df, pd.DataFrame([society_data])], ignore_index=True)
 
             # Upload the updated DataFrame back to GitHub
             update_excel_in_github(df, sha)
@@ -956,10 +932,12 @@ def scheduled_job():
 def start_scheduler():
     # Create the scheduler and add the job
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_job, 'cron', day_of_week='mon', hour=10, minute=00, timezone="Asia/Kolkata")
+    scheduler.add_job(scheduled_job, 'cron', day_of_week='wed', hour=11, minute=20, timezone="Asia/Kolkata")
     # Start the scheduler
     scheduler.start()
 
 # Start the scheduler in a separate thread
 if __name__ == "__main__":
     threading.Thread(target=start_scheduler, daemon=True).start()
+
+st.write("update")
