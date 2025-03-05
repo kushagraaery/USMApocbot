@@ -846,32 +846,32 @@ def update_report_data(report_data, sha):
         # Fetch the existing data from GitHub
         df, _ = fetch_excel_from_github()
         if df is not None:
-            # Iterate through the new report data
             for _, row in report_data.iterrows():
                 society_name = row["Society Name"]
-                new_membership_count = row.get(
-                    "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number.",
-                    None
-                )
+                
+                # Generate new answers using OpenAI for all questions
+                modified_questions = [q.replace("society_name", society_name) for q in questions]
+                society_data = {"Society Name": society_name}
 
-                # Ensure the new membership count is a valid integer
-                try:
-                    new_membership_count = int(new_membership_count)
-                except (ValueError, TypeError):
-                    st.warning(f"Invalid membership count for {society_name}, skipping update.")
-                    continue  # Skip this entry if the membership count is invalid
+                for i, question in enumerate(modified_questions):
+                    try:
+                        response = openai.ChatCompletion.create(
+                            model="gpt-3.5-turbo",
+                            messages=[{"role": "user", "content": question}]
+                        )
+                        answer = response["choices"][0]["message"]["content"].strip()
+                        society_data[questions[i]] = answer
+                    except Exception as e:
+                        st.error(f"Error fetching response for '{question}': {e}")
+                        society_data[questions[i]] = "Error"
 
-                # Check if the society exists in the existing data
+                # Check if society exists, update it; otherwise, append new row
                 if society_name in df["Society Name"].values:
-                    # Update the existing row directly
                     index = df[df["Society Name"] == society_name].index[0]
-                    df.loc[index, 
-                        "What is the membership count for society_name? Respond with one word (number) only. That should just be an integer nothing like approx or members just a number."
-                    ] = new_membership_count
+                    for question in questions:
+                        df.at[index, question] = society_data[question]
                 else:
-                    # Append the new row if the society doesn't exist
-                    new_row = row.to_dict()
-                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+                    df = pd.concat([df, pd.DataFrame([society_data])], ignore_index=True)
 
             # Upload the updated DataFrame back to GitHub
             update_excel_in_github(df, sha)
@@ -890,10 +890,12 @@ def scheduled_job():
 def start_scheduler():
     # Create the scheduler and add the job
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_job, 'cron', day_of_week='wed', hour=11, minute=20, timezone="Asia/Kolkata")
+    scheduler.add_job(scheduled_job, 'cron', day_of_week='wed', hour=11, minute=43, timezone="Asia/Kolkata")
     # Start the scheduler
     scheduler.start()
 
 # Start the scheduler in a separate thread
 if __name__ == "__main__":
     threading.Thread(target=start_scheduler, daemon=True).start()
+
+st.write("updated 2")
